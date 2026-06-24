@@ -1,0 +1,196 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String           @id @default(uuid())
+  email            String           @unique
+  name             String
+  role             String           @default("STUDENT") // STUDENT, ORGANIZER, ADMIN
+  avatarUrl        String?
+  bio              String?
+  college          String?
+  department       String?
+  graduationYear   String?
+  linkedinUrl      String?
+  githubUrl        String?
+  
+  // Settings
+  theme            String           @default("system")
+  highContrast     Boolean          @default(false)
+  accentColor      String           @default("blue")
+  notifyReminds    Boolean          @default(true)
+  notifyInvites    Boolean          @default(true)
+  notifyMilestones Boolean          @default(true)
+
+  // Gamification & Standings
+  points           Int              @default(0)
+  nationalRank     Int?
+  collegeRank      Int?
+
+  // Relations
+  skills           UserSkill[]
+  badges           UserBadge[]
+  certificates     Certificate[]
+  registrations    Registration[]
+  activities       Activity[]
+  teamMembers      TeamMember[]
+  sentInvites      TeamInvitation[] @relation("SentInvites")
+  receivedInvites  TeamInvitation[] @relation("ReceivedInvites")
+  supportMessages  SupportMessage[]
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model Skill {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  category    String      // TECHNOLOGY, DESIGN, BUSINESS, SCIENCE
+  userSkills  UserSkill[]
+}
+
+model UserSkill {
+  id      String @id @default(uuid())
+  userId  String
+  skillId String
+  level   Int    @default(10) // 1-100 progress value
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  description String
+  icon        String      // Material symbol icon key
+  requirement String      // Description of how to unlock
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id         String   @id @default(uuid())
+  userId     String
+  badgeId    String
+  unlockedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge      Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+}
+
+model Certificate {
+  id            String   @id @default(uuid())
+  userId        String
+  title         String
+  description   String
+  issuer        String
+  issueDate     DateTime @default(now())
+  credentialUrl String?
+  pdfUrl        String?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id            String         @id @default(uuid())
+  title         String
+  description   String
+  category      String
+  date          String
+  time          String
+  location      String
+  venue         String         @default("")
+  imageUrl      String
+  maxAttendees  Int
+  amount        Float          @default(0)
+  isFree        Boolean        @default(true)
+  registrations Registration[]
+  teams         Team[]
+  createdAt     DateTime       @default(now())
+}
+
+model Registration {
+  id              String    @id @default(uuid())
+  userId          String
+  eventId         String
+  registeredAt    DateTime  @default(now())
+  attendedAt      DateTime? // Check-in timestamp
+  courseCompleted Boolean   @default(false)
+  qrCodeString    String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event           Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  // Extra registration details (provided during event registration)
+  name            String    @default("")
+  email           String    @default("")
+  mobile          String    @default("")
+  place           String    @default("")
+  year            String    @default("")
+  field           String    @default("")
+  transactionId   String?
+
+  @@unique([userId, eventId])
+}
+
+model Team {
+  id                 String           @id @default(uuid())
+  name               String
+  projectDescription String?
+  openPositions      Int              @default(1)
+  eventId            String
+  event              Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  members            TeamMember[]
+  invitations        TeamInvitation[]
+  createdAt          DateTime         @default(now())
+}
+
+model TeamMember {
+  id     String  @id @default(uuid())
+  teamId String
+  userId String
+  isLead Boolean @default(false)
+  team   Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+model TeamInvitation {
+  id        String   @id @default(uuid())
+  teamId    String
+  fromId    String
+  toId      String
+  status    String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
+  createdAt DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  sender    User     @relation("SentInvites", fields: [fromId], references: [id], onDelete: Cascade)
+  recipient User     @relation("ReceivedInvites", fields: [toId], references: [id], onDelete: Cascade)
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  userId    String
+  icon      String
+  color     String
+  bgColor   String
+  text      String   // HTML support
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+ 
+model SupportMessage {
+  id        String   @id @default(uuid())
+  userId    String   // The student who started the chat
+  sender    String   // "STUDENT" or "COLLEGE"
+  text      String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
