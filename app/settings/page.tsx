@@ -232,9 +232,35 @@ export default function SettingsPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: "32px", paddingBottom: "80px" }}>
 
         {/* Header */}
-        <div>
-          <h2 style={{ fontSize: "28px", fontWeight: 700, color: "var(--on-surface)", marginBottom: "4px" }}>Account Settings</h2>
-          <p style={{ fontSize: "14px", color: "var(--on-surface-variant)" }}>Manage your student profile and global account preferences.</p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className="profile-container-md-row">
+          <div>
+            <h2 style={{ fontSize: "28px", fontWeight: 700, color: "var(--on-surface)", marginBottom: "4px" }}>Account Settings</h2>
+            <p style={{ fontSize: "14px", color: "var(--on-surface-variant)" }}>Manage your student profile and global account preferences.</p>
+          </div>
+          <a
+            href="/CampusConnect_Project_Report.pdf"
+            download="CampusConnect_Project_Report.pdf"
+            style={{ textDecoration: "none" }}
+          >
+            <button
+              className="btn-secondary"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 20px",
+                borderRadius: "12px",
+                fontWeight: 700,
+                fontSize: "14px",
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(0, 74, 198, 0.15)",
+                whiteSpace: "nowrap"
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>download</span>
+              System Specification Report (PDF)
+            </button>
+          </a>
         </div>
 
         {/* Profile Section */}
